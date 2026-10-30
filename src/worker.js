@@ -35,7 +35,8 @@ async function db(env, path, init = {}) {
     ...init,
     headers: {
       apikey: env.SUPABASE_SERVICE_KEY,
-      authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY,
+      // legacy service_role keys are JWTs and also go in Authorization; new sb_secret_ keys only go in apikey
+      ...(env.SUPABASE_SERVICE_KEY.startsWith('eyJ') ? { authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY } : {}),
       'content-type': 'application/json',
       prefer: 'return=representation',
       ...(init.headers || {}),

@@ -245,7 +245,7 @@ input.bad{border-color:var(--coral)}
 .prog div.cur{color:var(--navy)}
 @media(max-width:600px){.prog div{font-size:0}.prog div.cur{font-size:11px}}
 .bk-grid{display:grid;grid-template-columns:1fr 330px;gap:26px;align-items:start}
-@media(max-width:900px){.bk-grid{grid-template-columns:1fr}.sum{position:static;order:-1;padding:20px}.sum.empty{display:none}}
+@media(max-width:900px){.bk-grid{grid-template-columns:1fr}}
 .sum{background:var(--navy);color:#fff;border-radius:24px;padding:26px;position:sticky;top:96px}
 .sum h4{color:#fff;font-size:20px;margin-bottom:14px}
 .sum .ln{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.12);font-size:15px}
@@ -344,6 +344,25 @@ footer .fl a{display:block;text-decoration:none;opacity:.85;margin-bottom:4px}
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}
 .reveal.in{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.view.on{animation:none}html{scroll-behavior:auto}}
+
+/* ---- phone booking bar (must stay last) ---- */
+#bkbar,#sheetbg{display:none}
+@media(max-width:900px){
+  .sum{display:none}
+  .sum.sheet{display:block;position:fixed;left:12px;right:12px;top:auto;bottom:calc(var(--strip) + 84px);z-index:70;max-height:62vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:sheetup .25s ease}
+  @keyframes sheetup{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+  #sheetbg.on{display:block;position:fixed;inset:0;background:rgba(9,24,44,.35);z-index:66}
+  #bkbar.on{display:flex;position:fixed;left:10px;right:10px;bottom:calc(var(--strip) + 8px);z-index:68;background:var(--navy);color:#fff;border-radius:18px;padding:9px 9px 9px 16px;align-items:center;gap:10px;box-shadow:0 12px 30px rgba(9,24,44,.35)}
+  #bkbar .info{flex:1;min-width:0;text-align:left;background:none;border:0;color:#fff;cursor:pointer;padding:0}
+  #bkbar .t{display:flex;align-items:center;gap:6px;font-family:"Fraunces",serif;font-size:22px;font-weight:600;line-height:1.1}
+  #bkbar .t i{font-style:normal;font-family:"DM Sans";font-size:12px;opacity:.7;transition:transform .2s}
+  #bkbar.open .t i{transform:rotate(180deg)}
+  #bkbar .s{display:block;font-size:12px;color:#bcd3dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #bkbar .btn{padding:12px 16px;font-size:15px;flex:none}
+  #navrow #next{display:none}
+  #navrow{justify-content:flex-start}
+  body.booking main{padding-bottom:80px}
+}
 </style>
 </head>
 <body>
@@ -671,6 +690,8 @@ footer .fl a{display:block;text-decoration:none;opacity:.85;margin-bottom:4px}
           <div class="dep">Due today: <b>$150 deposit</b><br><span id="s-bal">Balance at pickup: —</span></div>
           <p class="note">Includes free parking, Bluetooth radio and a 40-mile lithium battery.</p>
         </aside>
+        <div id="sheetbg"></div>
+        <div id="bkbar"><button type="button" class="info" id="bkinfo"><span class="t"><span id="bk-tot">$0</span><i>▲</i></span><span class="s" id="bk-sub">Pick your dates</span></button><button type="button" class="btn btn-sun" id="bknext">Continue →</button></div>
       </div>
 
       <!-- CONFIRMATION -->
@@ -848,6 +869,7 @@ function route(){
   document.getElementById('menu').classList.remove('open');
   window.scrollTo(0,0);
   if(h==='book')renderBook();
+  syncBar();
   updateFlag();
   setTimeout(function(){setTarget(scrollProgress())},30);
 }
@@ -973,6 +995,9 @@ function renderSum(){
   var tot=B.cart&&n?priceFor(B.cart):0;
   document.getElementById('s-tot').textContent=tot?'$'+tot.toLocaleString():(n?'Choose a cart':'$0');
   document.getElementById('s-bal').textContent='Balance at pickup: '+(tot?'$'+(tot-DEPOSIT).toLocaleString():'—');
+  document.getElementById('bk-tot').textContent=tot?'$'+tot.toLocaleString():'$0';
+  var sub=[];if(B.cart)sub.push(B.cart+'-Seater');if(B.start)sub.push(fmt(B.start).replace(/^\w+, /,'')+(B.end?' → '+fmt(B.end).replace(/^\w+, /,''):''));
+  document.getElementById('bk-sub').textContent=sub.length?sub.join(' · ')+' · Details':'Pick your dates';
 }
 
 /* signature */
@@ -988,6 +1013,13 @@ document.getElementById('sigclear').onclick=function(){ctx.clearRect(0,0,cv.widt
 document.getElementById('cn').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,16).replace(/(\d{4})(?=\d)/g,'$1 ')});
 document.getElementById('cx').addEventListener('input',function(){var v=this.value.replace(/\D/g,'').slice(0,4);this.value=v.length>2?v.slice(0,2)+' / '+v.slice(2):v});
 
+var bkbar=document.getElementById('bkbar'),sumEl=document.getElementById('sum'),sheetbg=document.getElementById('sheetbg');
+function closeSheet(){sumEl.classList.remove('sheet');sheetbg.classList.remove('on');bkbar.classList.remove('open')}
+function syncBar(){var on=view==='book'&&document.getElementById('done').style.display!=='block';bkbar.classList.toggle('on',on);document.body.classList.toggle('booking',on);if(!on)closeSheet()}
+document.getElementById('bkinfo').onclick=function(){var o=!sumEl.classList.contains('sheet');sumEl.classList.toggle('sheet',o);sheetbg.classList.toggle('on',o);bkbar.classList.toggle('open',o)};
+sheetbg.onclick=closeSheet;
+document.getElementById('bknext').onclick=function(){closeSheet();var n=document.getElementById('next');n.click();var b=this;b.textContent=n.textContent;b.disabled=n.disabled;if(n.disabled){var iv=setInterval(function(){if(!n.disabled){clearInterval(iv);b.disabled=false}},200)}};
+
 /* steps */
 var LABELS=['Continue →','Continue →','Continue →','Continue to deposit →','Pay $150 deposit'];
 function showStep(n){
@@ -996,6 +1028,7 @@ function showStep(n){
   document.querySelectorAll('#prog div').forEach(function(d,i){d.className=i+1<n?'pd':i+1===n?'cur':''});
   document.getElementById('back').style.visibility=n>1?'visible':'hidden';
   document.getElementById('next').textContent=LABELS[n-1];
+  document.getElementById('bknext').textContent=LABELS[n-1];syncBar();
   if(n===1)renderCal();
   if(n===2)renderPick();
   if(n===4)setTimeout(sizeSig,30);
@@ -1030,7 +1063,7 @@ function finish(){
   document.getElementById('d-dates').textContent=fmt(B.start)+' → '+fmt(B.end,true);
   document.getElementById('d-bal').textContent='$'+(tot-DEPOSIT).toLocaleString();
   document.getElementById('d-ph').textContent=val('ph');
-  window.scrollTo(0,0);updateFlag();setTarget(scrollProgress());
+  window.scrollTo(0,0);updateFlag();syncBar();setTarget(scrollProgress());
 }
 document.getElementById('again').onclick=function(){resetBook();showStep(1)};
 function resetBook(){

@@ -68,6 +68,35 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--sea)}
 .fleetcard h3{margin-bottom:12px}
 .sec{margin-top:18px}
 .hint{color:var(--muted);font-size:14px;margin-bottom:14px}
+
+input,select,textarea{min-width:0}
+.pb{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+@media(max-width:860px){.pb{grid-template-columns:1fr}.psum{position:static!important}}
+.psum{background:var(--navy);color:#fff;border-radius:18px;padding:22px;position:sticky;top:80px}
+.psum h3{color:#fff;margin-bottom:10px}
+.psum .ln{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.12);font-size:14px}
+.psum .ln span{color:#bcd3dc}.psum .ln b{text-align:right}
+.psum input{background:rgba(255,255,255,.95)}
+.ptot{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px}.ptot span{color:#bcd3dc}.ptot b{font-family:"Fraunces",serif;font-size:30px}
+.calbar{display:flex;align-items:center;justify-content:space-between;margin:6px 0 10px}
+.calbar button{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--line);background:#fff;cursor:pointer;font-size:18px;color:var(--navy)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:520px;margin:0 auto}
+.cal .dw{text-align:center;font-size:12px;font-weight:700;color:var(--muted);padding:4px 0}
+.cal .d{aspect-ratio:1/1;border:0;background:#f4f8f9;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;color:var(--ink);position:relative}
+.cal .d:disabled{background:transparent;color:#c3cdd1;cursor:default;font-weight:500}
+.cal .d.sat:not(:disabled){color:var(--coral)}
+.cal .d.inr{background:#d9f0f2;color:var(--navy)}.cal .d.edge{background:var(--coral)!important;color:#fff!important}
+.cal .d .dot{position:absolute;bottom:5px;left:50%;width:5px;height:5px;margin-left:-2.5px;border-radius:50%}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.ppick{display:grid;gap:12px}
+.popt{display:grid;grid-template-columns:120px 1fr auto;gap:14px;align-items:center;background:#fff;border:2px solid var(--line);border-radius:16px;padding:10px 14px 10px 10px;cursor:pointer;text-align:left;width:100%}
+.popt.sel{border-color:var(--coral);box-shadow:0 0 0 4px rgba(239,111,85,.15)}
+.popt img{width:120px;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:block}
+.popt h4{font-family:"Fraunces",serif;font-size:19px;color:var(--navy)}
+.popt .pr{font-family:"Fraunces",serif;font-size:22px;color:var(--navy);text-align:right}.popt .pr small{display:block;font-family:"DM Sans";font-size:12px;color:var(--muted)}
+.av{display:inline-block;margin-top:4px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px}.av.ok{background:#dff3e6;color:#22774a}.av.low{background:#fff1e3;color:#b4552f}.av.no{background:#f3e1e1;color:#a33}
+@media(max-width:560px){.popt{grid-template-columns:90px 1fr}.popt img{width:90px;grid-row:1/3}.popt .pr{grid-column:2;text-align:left}.popt .pr small{display:inline;margin-left:4px}}
 </style>
 </head>
 <body>
@@ -106,26 +135,45 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--sea)}
     </div>
 
     <div class="pane" id="p-phone">
-      <form class="card" id="pf">
-        <h2 style="font-size:24px;margin-bottom:4px">Add a phone booking</h2>
-        <p class="hint">For bookings taken by phone or text, so the online calendar stays accurate.</p>
-        <div class="grid g3">
-          <div><label>Cart</label><select id="p-cart"></select></div>
-          <div><label>Pickup</label><input type="date" id="p-start"></div>
-          <div><label>Return</label><input type="date" id="p-end"></div>
+      <form id="pf">
+      <div class="pb">
+        <div>
+          <div class="card">
+            <h2 style="font-size:24px;margin-bottom:4px">Add a phone booking</h2>
+            <p class="hint">Tap the pickup day, then the return day. Dots show how many carts are free that day.</p>
+            <div class="calbar"><button type="button" id="cprev">‹</button><h3 id="cmon"></h3><button type="button" id="cnext">›</button></div>
+            <div class="cal" id="ccal"></div>
+            <div class="legend"><span><i style="background:#3bb273"></i>Plenty free</span><span><i style="background:#f6a54a"></i>2 or fewer</span><span><i style="background:#d9534f"></i>Fully booked</span></div>
+            <p class="hint" style="margin:10px 0 0;font-size:13px">Summer is normally Saturday to Saturday. You can pick any dates here.</p>
+          </div>
+          <div class="card sec"><h3 style="margin-bottom:12px">Cart</h3><div id="ppick" class="ppick"><div class="hint" style="margin:0">Pick dates first.</div></div></div>
+          <div class="card sec">
+            <h3 style="margin-bottom:12px">Customer</h3>
+            <div class="grid g2">
+              <div><label>Name</label><input id="p-name"></div>
+              <div><label>Phone</label><input id="p-tel" type="tel"></div>
+              <div><label>Email (optional)</label><input id="p-email" type="email"></div>
+              <div><label>Staying at (optional)</label><input id="p-stay"></div>
+              <div><label>Party size (optional)</label><input id="p-party" inputmode="numeric"></div>
+            </div>
+            <div class="sec"><label>Notes (optional)</label><textarea id="p-notes" rows="3" placeholder="Anything from the call: arrival time, delivery, special requests"></textarea></div>
+          </div>
         </div>
-        <div class="grid g2 sec">
-          <div><label>Name</label><input id="p-name"></div>
-          <div><label>Phone</label><input id="p-tel" type="tel"></div>
-          <div><label>Email (optional)</label><input id="p-email" type="email"></div>
-          <div><label>Staying at (optional)</label><input id="p-stay"></div>
-        </div>
-        <div class="grid g2 sec">
-          <div><label>Total ($)</label><input id="p-total" inputmode="numeric" placeholder="Blank = standard price"></div>
-          <div><label>Notes (optional)</label><input id="p-notes"></div>
-        </div>
-        <button class="btn b-coral" style="margin-top:16px">Save booking</button>
-        <div class="msg" id="pmsg"></div>
+        <aside class="psum">
+          <h3>Booking summary</h3>
+          <div class="ln"><span>Pickup</span><b id="ps-start">—</b></div>
+          <div class="ln"><span>Return</span><b id="ps-end">—</b></div>
+          <div class="ln"><span>Length</span><b id="ps-len">—</b></div>
+          <div class="ln"><span>Cart</span><b id="ps-cart">—</b></div>
+          <div class="ln"><span>Standard price</span><b id="ps-std">—</b></div>
+          <div style="margin-top:14px"><label style="color:#cfe3ea">Custom total ($)</label><input id="p-total" inputmode="numeric" placeholder="Leave blank for standard"></div>
+          <div style="margin-top:10px"><label style="color:#cfe3ea">Already paid ($)</label><input id="p-paid" inputmode="numeric" placeholder="0"></div>
+          <div class="ptot"><span>Total</span><b id="ps-tot">$0</b></div>
+          <div class="ln"><span>Due at pickup</span><b id="ps-due">—</b></div>
+          <button class="btn b-coral" style="width:100%;margin-top:16px">Save booking</button>
+          <div class="msg" id="pmsg" style="color:#fff"></div>
+        </aside>
+      </div>
       </form>
     </div>
 
@@ -186,7 +234,7 @@ $('filters').onclick=function(e){var b=e.target.closest('button');if(!b)return;F
 
 function render(){renderStats();renderList();renderBlocks();renderFleet();
   var opts=DATA.fleet.map(function(f){return '<option value="'+f.type+'">'+esc(f.name)+'</option>'}).join('');
-  $('p-cart').innerHTML=opts;$('b-cart').innerHTML=opts;}
+  $('b-cart').innerHTML=opts;}
 
 function renderStats(){
   var t=today(),b=DATA.bookings.filter(function(x){return x.status!=='cancelled'});
@@ -236,12 +284,62 @@ $('list').onclick=function(e){
 };
 
 /* phone booking */
-$('pf').onsubmit=function(e){e.preventDefault();var m=$('pmsg');m.className='msg';m.textContent='Saving…';
-  var body={cart:$('p-cart').value,start:$('p-start').value,end:$('p-end').value,name:$('p-name').value,phone:$("p-tel").value,email:$('p-email').value,stay:$('p-stay').value,total:$('p-total').value,notes:$('p-notes').value};
-  if(this.dataset.force==='1')body.force=true;
-  var form=this;
-  api('booking',body).then(function(j){m.className='msg ok';m.textContent='Saved as '+j.code+'.';form.reset();form.dataset.force='';load()})
-  .catch(function(err){m.className='msg err';
+var PB={s:null,e:null,cart:null},BUSY=[],CM=new Date();CM.setDate(1);CM.setHours(0,0,0,0);
+var DAYMS=864e5;
+function isoD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function addDays(d,n){var x=new Date(d);x.setDate(x.getDate()+n);return x}
+function inUse(type,s,e){var max=0;for(var d=new Date(s);d<e;d=addDays(d,1)){var k=isoD(d),n=0;BUSY.forEach(function(b){if(b.t===type&&b.s<=k&&b.e>k)n+=b.q});if(n>max)max=n}return max}
+function freeOn(d){var left=0;DATA.fleet.forEach(function(f){left+=f.count-inUse(f.type,d,addDays(d,1))});return left}
+function nDays(){return PB.s&&PB.e?Math.round((PB.e-PB.s)/DAYMS):0}
+function stdPrice(f){var n=nDays();if(!n)return 0;var m=PB.s.getMonth();if(m>=5&&m<=7)return f.week_price*Math.max(1,Math.round(n/7));var wk=Math.floor(n/7),r=n%7;return wk*f.week_price+Math.min(r*f.day_price,f.week_price)}
+function loadBusy(){return fetch('/api/availability',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){BUSY=j.busy||[]}).catch(function(){})}
+function renderCalA(){
+  var y=CM.getFullYear(),m=CM.getMonth(),td=new Date();td.setHours(0,0,0,0);
+  $('cmon').textContent=CM.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  var h=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(d){return '<div class="dw">'+d+'</div>'}).join('');
+  for(var i=0;i<new Date(y,m,1).getDay();i++)h+='<div></div>';
+  var n=new Date(y,m+1,0).getDate();
+  for(var d=1;d<=n;d++){var dt=new Date(y,m,d),past=dt<td,cls='d'+(dt.getDay()===6?' sat':''),dot='';
+    if(!past){var f=freeOn(dt);dot='<span class="dot" style="background:'+(f<=0?'#d9534f':f<=2?'#f6a54a':'#3bb273')+'"></span>'}
+    if(PB.s){var e=PB.e||PB.s;if(dt>=PB.s&&dt<=e)cls+=' inr';if(+dt===+PB.s||(PB.e&&+dt===+PB.e))cls+=' edge'}
+    h+='<button type="button" class="'+cls+'" data-d="'+dt.getTime()+'"'+(past?' disabled':'')+'>'+d+dot+'</button>'}
+  $('ccal').innerHTML=h;
+}
+$('ccal').onclick=function(e){var b=e.target.closest('.d');if(!b||b.disabled)return;var d=new Date(+b.dataset.d);
+  if(!PB.s||PB.e||d<=PB.s){PB.s=d;PB.e=null}else PB.e=d;renderCalA();renderPickA();renderSumA()};
+$('cprev').onclick=function(){CM.setMonth(CM.getMonth()-1);renderCalA()};
+$('cnext').onclick=function(){CM.setMonth(CM.getMonth()+1);renderCalA()};
+function renderPickA(){
+  if(!PB.s||!PB.e){$('ppick').innerHTML='<div class="hint" style="margin:0">'+(PB.s?'Now tap the return day.':'Pick dates first.')+'</div>';return}
+  $('ppick').innerHTML=DATA.fleet.map(function(f){var a=f.count-inUse(f.type,PB.s,PB.e);
+    var av=a<=0?'<span class="av no">None free (you can still book)</span>':a<=1?'<span class="av low">1 free</span>':'<span class="av ok">'+a+' free</span>';
+    return '<button type="button" class="popt'+(PB.cart===f.type?' sel':'')+'" data-t="'+f.type+'"><img src="/cart-'+f.type+'.jpg" alt=""><div><h4>'+esc(f.name)+'</h4>'+av+'</div><div class="pr">$'+stdPrice(f).toLocaleString()+'<small>standard</small></div></button>'}).join('');
+}
+$('ppick').onclick=function(e){var b=e.target.closest('.popt');if(!b)return;PB.cart=b.dataset.t;renderPickA();renderSumA()};
+function curTotal(){var f=PB.cart&&DATA.fleet.find(function(x){return x.type===PB.cart});var c=$('p-total').value.trim();if(c!==''&&!isNaN(+c))return Math.round(+c);return f?stdPrice(f):0}
+function renderSumA(){
+  var n=nDays(),f=PB.cart&&DATA.fleet.find(function(x){return x.type===PB.cart});
+  $('ps-start').textContent=PB.s?PB.s.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}):'—';
+  $('ps-end').textContent=PB.e?PB.e.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}):'—';
+  $('ps-len').textContent=n?(n%7===0?(n/7)+' week'+(n>7?'s':''):n+' day'+(n>1?'s':'')):'—';
+  $('ps-cart').textContent=f?f.name:'—';
+  $('ps-std').textContent=f&&n?'$'+stdPrice(f).toLocaleString():'—';
+  var tot=f&&n?curTotal():0,paid=parseInt($('p-paid').value)||0;
+  $('ps-tot').textContent='$'+tot.toLocaleString();
+  $('ps-due').textContent=f&&n?'$'+Math.max(0,tot-paid).toLocaleString():'—';
+}
+$('p-total').oninput=renderSumA;$('p-paid').oninput=renderSumA;
+document.querySelector('[data-p="phone"]').addEventListener('click',function(){loadBusy().then(function(){renderCalA();renderPickA();renderSumA()})});
+$('pf').onsubmit=function(e){e.preventDefault();var m=$('pmsg');m.className='msg';m.style.color='#fff';
+  if(!PB.s||!PB.e){m.textContent='Pick pickup and return days.';return}
+  if(!PB.cart){m.textContent='Pick a cart.';return}
+  if(!$('p-name').value.trim()){m.textContent='Enter the customer’s name.';$('p-name').focus();return}
+  m.textContent='Saving…';var form=this;
+  var body={cart:PB.cart,start:isoD(PB.s),end:isoD(PB.e),name:$('p-name').value,phone:$('p-tel').value,email:$('p-email').value,stay:$('p-stay').value,party:$('p-party').value,total:$('p-total').value,paid:$('p-paid').value,notes:$('p-notes').value};
+  if(form.dataset.force==='1')body.force=true;
+  api('booking',body).then(function(j){m.style.color='#9be3b8';m.textContent='Saved as '+j.code+'.';form.reset();form.dataset.force='';PB={s:null,e:null,cart:null};
+    return load().then(loadBusy).then(function(){renderCalA();renderPickA();renderSumA()})})
+  .catch(function(err){m.style.color='#ffc2b5';
     if(/free for those dates/.test(err.message)){m.textContent=err.message+' Tap Save again to book it anyway.';form.dataset.force='1'}else m.textContent=err.message});
 };
 

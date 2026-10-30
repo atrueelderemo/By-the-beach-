@@ -242,7 +242,7 @@ async function admin(url, request, env) {
     const code = 'BTB-' + Math.random().toString(36).slice(2, 6).toUpperCase();
     const [row] = await db(env, 'bookings', { method: 'POST', body: JSON.stringify({
       code, cart_type: f.type, start_date: iso(start), end_date: iso(end), name: s(body.name), phone: s(body.phone, 40),
-      email: s(body.email), stay: s(body.stay), notes: s(body.notes, 1000), total, deposit: 0, status: 'confirmed', source: 'phone',
+      email: s(body.email), stay: s(body.stay), party: s(body.party, 10), notes: s(body.notes, 1000), total, deposit: Math.max(0, Math.min(total, parseInt(body.paid) || 0)), status: 'confirmed', source: 'phone',
     }) });
     return json({ ok: true, code: row.code });
   }

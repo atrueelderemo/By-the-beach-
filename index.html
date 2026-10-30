@@ -707,7 +707,7 @@ footer .fl a{display:block;text-decoration:none;opacity:.85;margin-bottom:4px}
           <div class="ln" style="display:flex;justify-content:space-between;padding:8px 0"><span style="color:var(--muted)">Due at pickup</span><b id="d-bal"></b></div>
           <p style="margin-top:14px;color:var(--muted);font-size:15px">We'll text <b id="d-ph"></b> with pickup details before your trip. Pickup is at 6016 E Oak Island Dr, Unit B.</p>
         </div>
-        <p style="font-size:13px;color:var(--muted);margin-top:16px">Demo preview: no booking was made and no card was charged.</p>
+        <p id="d-note" style="font-size:13px;color:var(--muted);margin-top:16px">Demo preview: no booking was made and no card was charged.</p>
         <div style="margin-top:20px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><a class="btn btn-navy" href="#home">Back to home</a><button class="btn btn-line" id="again">Make another booking</button></div>
       </div>
     </div>
@@ -868,7 +868,7 @@ function route(){
   document.querySelectorAll('[data-nav]').forEach(function(a){a.classList.toggle('on',a.dataset.nav===h)});
   document.getElementById('menu').classList.remove('open');
   window.scrollTo(0,0);
-  if(h==='book')renderBook();
+  if(h==='book'){renderBook();loadLive()}
   syncBar();
   updateFlag();
   setTimeout(function(){setTarget(scrollProgress())},30);
@@ -907,14 +907,28 @@ function bookedWeek(type,ws){
   if(m===6&&ws.getDate()<=7)return c;
   return Math.min(c,Math.floor((base+r*0.5)*c));
 }
+/* ---- live availability from the database (falls back to sample data if the API isn't reachable) ---- */
+var LIVE=null;
+function isoL(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function maxInUse(type,s,e){var max=0;for(var d=new Date(s);d<e;d=addD(d,1)){var k=isoL(d),n=0;LIVE.forEach(function(b){if(b.t===type&&b.s<=k&&b.e>k)n+=b.q});if(n>max)max=n}return max}
+function loadLive(){
+  if(!/^https?:/.test(location.protocol))return;
+  fetch('/api/availability',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){
+    if(!j||!j.fleet)return;
+    j.fleet.forEach(function(f){if(FLEET[f.type]){FLEET[f.type].count=f.count;FLEET[f.type].week=f.week_price;FLEET[f.type].day=f.day_price;FLEET[f.type].name=f.name}});
+    LIVE=j.busy||[];
+    if(view==='book'){if(B.step===1)renderCal();if(B.step===2)renderPick();renderSum()}
+  }).catch(function(){});
+}
 function availFor(type,s,e){
+  if(LIVE)return FLEET[type].count-maxInUse(type,s,e);
   var c=FLEET[type].count,worst=0,ws=weekStart(s);
   while(ws<e){worst=Math.max(worst,bookedWeek(type,ws));ws=addD(ws,7)}
   return c-worst;
 }
 function dayStatus(d){ // for calendar dots: combined across fleet for the week
-  var ws=weekStart(d),left=0,tot=0;
-  for(var t in FLEET){left+=FLEET[t].count-bookedWeek(t,ws);tot+=FLEET[t].count}
+  var ws=weekStart(d),left=0;
+  for(var t in FLEET){left+=LIVE?FLEET[t].count-maxInUse(t,ws,addD(ws,7)):FLEET[t].count-bookedWeek(t,ws)}
   return left===0?'no':(left<=2?'low':'ok');
 }
 function days(){return B.start&&B.end?Math.round((B.end-B.start)/MS):0}
@@ -1056,17 +1070,24 @@ document.getElementById('next').onclick=function(){
     if(!signed){document.getElementById('err4').textContent='Please sign above.';return}document.getElementById('err4').textContent=''}
   if(s===5){var m=[];if(val('cn').replace(/\D/g,'').length<15)m.push('cn');if(val('cx').replace(/\D/g,'').length<4)m.push('cx');if(val('cv').length<3)m.push('cv');if(val('zip').length<5)m.push('zip');
     if(m.length){m.forEach(bad);document.getElementById('err5').textContent='Please complete your card details (any test numbers work in this demo).';return}
-    var btn=this;btn.disabled=true;btn.textContent='Processing…';setTimeout(function(){btn.disabled=false;finish()},1100);return}
+    var btn=this;btn.disabled=true;btn.textContent='Processing…';
+    if(!LIVE){setTimeout(function(){btn.disabled=false;finish()},1100);return}
+    fetch('/api/book',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({cart:B.cart,start:isoL(B.start),end:isoL(B.end),name:val('fn'),phone:val('ph'),email:val('em'),stay:val('stay'),party:document.getElementById('party').value,notes:val('notes'),signature:cv.toDataURL('image/png')})})
+      .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j}})})
+      .then(function(x){btn.disabled=false;if(!x.ok||!x.j.ok){btn.textContent=LABELS[4];document.getElementById('bknext').textContent=LABELS[4];document.getElementById('err5').textContent=(x.j&&x.j.error)||'Something went wrong. Please call (704) 779-0263.';loadLive();return}finish(x.j.code)})
+      .catch(function(){btn.disabled=false;btn.textContent=LABELS[4];document.getElementById('err5').textContent='Could not reach the server. Please try again or call (704) 779-0263.'});
+    return}
   showStep(s+1);window.scrollTo({top:0,behavior:reduce?'auto':'smooth'});
 };
 document.getElementById('back').onclick=function(){if(B.step>1){showStep(B.step-1);window.scrollTo({top:0,behavior:reduce?'auto':'smooth'})}};
-function finish(){
+function finish(code){
   var tot=priceFor(B.cart);
   document.getElementById('bkgrid').style.display='none';document.getElementById('prog').style.display='none';
   document.querySelector('.bk-head').style.display='none';
   var d=document.getElementById('done');d.style.display='block';
   document.getElementById('d-title').textContent='See you on Oak Island, '+val('fn').split(' ')[0]+'!';
-  document.getElementById('d-code').textContent='BTB-'+Math.floor(1000+Math.random()*9000);
+  document.getElementById('d-note').textContent=code?'Your booking is saved. No card was charged yet (online payments coming soon).':'Demo preview: no booking was made and no card was charged.';
+  document.getElementById('d-code').textContent=code||('BTB-'+Math.floor(1000+Math.random()*9000));
   document.getElementById('d-cart').textContent=FLEET[B.cart].name;
   document.getElementById('d-dates').textContent=fmt(B.start)+' → '+fmt(B.end,true);
   var dp=depFor(tot);
@@ -1091,6 +1112,7 @@ function renderBook(){
 
 route();
 paint(0);
+loadLive();
 /* intro: cart drives in from off-screen left on load */
 if(!reduce){
   var from=-(16+96+60),t0=null,DUR=1900;

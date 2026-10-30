@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin · By the Beach Golf Cart Rentals</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0e3a54;--ocean:#127a8a;--sea:#4fb3bf;--foam:#e6f4f4;--sand:#f7efe2;--coral:#ef6f55;--ink:#16313f;--muted:#5b707b;--line:#dfe6e8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"DM Sans",system-ui,sans-serif;color:var(--ink);background:var(--sand);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+h1,h2,h3{font-family:"Fraunces",Georgia,serif;color:var(--navy);font-weight:600;line-height:1.15}
+button,input,select,textarea{font:inherit}
+.wrap{max-width:1100px;margin:0 auto;padding:0 18px}
+header{background:var(--navy);color:#fff;position:sticky;top:0;z-index:20}
+header .wrap{display:flex;align-items:center;gap:12px;height:64px}
+header img{width:40px;height:40px;border-radius:10px;background:var(--sand)}
+header b{font-family:"Fraunces",serif;font-size:19px;flex:1}
+header a,header button{color:#cfe3ea;background:none;border:0;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;padding:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:999px;padding:11px 18px;font-weight:700;font-size:15px;cursor:pointer;white-space:nowrap}
+.btn:disabled{opacity:.5;cursor:default}
+.b-coral{background:var(--coral);color:#fff}.b-navy{background:var(--navy);color:#fff}.b-line{background:#fff;color:var(--navy);border:1.5px solid #cdd8dc}
+.b-green{background:#2f9a62;color:#fff}.b-red{background:#fff;color:#b23a2a;border:1.5px solid #e9b9b0}.b-red.arm{background:#b23a2a;color:#fff}
+.sm{padding:8px 14px;font-size:14px}
+.card{background:#fff;border-radius:18px;padding:22px;box-shadow:0 6px 20px rgba(14,58,84,.08)}
+label{display:block;font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+input,select,textarea{width:100%;padding:11px 12px;border:1.5px solid #d8e2e6;border-radius:10px;background:#fbfdfd;font-size:16px;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--sea)}
+.grid{display:grid;gap:14px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+.msg{font-size:14px;font-weight:600;min-height:20px;margin-top:10px}.msg.err{color:#b23a2a}.msg.ok{color:#2f7a52}
+/* login */
+#login{max-width:380px;margin:12vh auto 0;text-align:center}
+#login img{width:90px;height:90px;border-radius:20px;margin-bottom:14px}
+#login h1{font-size:28px;margin-bottom:6px}#login p{color:var(--muted);margin-bottom:20px}
+/* tabs */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:18px 0 4px;-webkit-overflow-scrolling:touch}
+.tabs button{border:0;background:#fff;color:var(--navy);font-weight:700;padding:10px 16px;border-radius:999px;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(14,58,84,.06)}
+.tabs button.on{background:var(--navy);color:#fff}
+.pane{display:none;padding:16px 0 60px}.pane.on{display:block}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat{background:#fff;border-radius:16px;padding:14px 16px}.stat b{display:block;font-family:"Fraunces",serif;font-size:28px;color:var(--navy)}.stat span{font-size:13px;color:var(--muted)}
+@media(max-width:640px){.stats{grid-template-columns:1fr 1fr}}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filters button{border:1.5px solid #cdd8dc;background:#fff;border-radius:999px;padding:7px 14px;font-weight:600;font-size:14px;cursor:pointer;color:var(--navy)}
+.filters button.on{background:var(--ocean);border-color:var(--ocean);color:#fff}
+.bk{background:#fff;border-radius:16px;padding:18px 20px;margin-bottom:12px;box-shadow:0 4px 14px rgba(14,58,84,.06);border-left:5px solid var(--sea)}
+.bk.pending{border-left-color:#f0a24a}.bk.cancelled{border-left-color:#c9c9c9;opacity:.75}
+.bk .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.bk h3{font-size:20px}.bk .dates{font-weight:700;color:var(--navy);margin-top:2px}
+.badge{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.badge.pending{background:#fff1e3;color:#b4552f}.badge.confirmed{background:#dff3e6;color:#22774a}.badge.cancelled{background:#eee;color:#666}
+.badge.phone{background:var(--foam);color:var(--ocean);margin-left:6px}
+.info{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 18px;margin:12px 0;font-size:15px}
+.info div span{display:block;font-size:12px;color:var(--muted)}
+.info a{color:var(--ocean);font-weight:600}
+@media(max-width:640px){.info{grid-template-columns:1fr 1fr}}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.sig{margin-top:10px;border:1px dashed #cdd8dc;border-radius:10px;padding:8px;background:#fafcfc}.sig img{max-width:100%;height:auto;display:block}
+.empty{text-align:center;color:var(--muted);padding:40px 10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.fleetcard h3{margin-bottom:12px}
+.sec{margin-top:18px}
+.hint{color:var(--muted);font-size:14px;margin-bottom:14px}
+</style>
+</head>
+<body>
+
+<div id="login" class="wrap">
+  <img src="/apple-touch-icon.png" alt="">
+  <h1>Owner sign in</h1>
+  <p>By the Beach Golf Cart Rentals</p>
+  <form id="lf" class="card">
+    <label for="pw">Password</label>
+    <input id="pw" type="password" autocomplete="current-password">
+    <button class="btn b-coral" style="width:100%;margin-top:14px">Sign in</button>
+    <div class="msg err" id="lmsg"></div>
+  </form>
+</div>
+
+<div id="app" style="display:none">
+  <header><div class="wrap"><img src="/apple-touch-icon.png" alt=""><b>Bookings</b><a href="/" target="_blank">View site</a><button id="out">Sign out</button></div></header>
+  <div class="wrap">
+    <div class="tabs" id="tabs">
+      <button data-p="bookings" class="on">Bookings</button>
+      <button data-p="phone">Add phone booking</button>
+      <button data-p="blocks">Block carts</button>
+      <button data-p="fleet">Carts &amp; prices</button>
+    </div>
+
+    <div class="pane on" id="p-bookings">
+      <div class="stats" id="stats"></div>
+      <div class="filters" id="filters">
+        <button data-f="upcoming" class="on">Upcoming</button>
+        <button data-f="pending">Needs confirming</button>
+        <button data-f="past">Past</button>
+        <button data-f="cancelled">Cancelled</button>
+      </div>
+      <div id="list"></div>
+    </div>
+
+    <div class="pane" id="p-phone">
+      <form class="card" id="pf">
+        <h2 style="font-size:24px;margin-bottom:4px">Add a phone booking</h2>
+        <p class="hint">For bookings taken by phone or text, so the online calendar stays accurate.</p>
+        <div class="grid g3">
+          <div><label>Cart</label><select id="p-cart"></select></div>
+          <div><label>Pickup</label><input type="date" id="p-start"></div>
+          <div><label>Return</label><input type="date" id="p-end"></div>
+        </div>
+        <div class="grid g2 sec">
+          <div><label>Name</label><input id="p-name"></div>
+          <div><label>Phone</label><input id="p-tel" type="tel"></div>
+          <div><label>Email (optional)</label><input id="p-email" type="email"></div>
+          <div><label>Staying at (optional)</label><input id="p-stay"></div>
+        </div>
+        <div class="grid g2 sec">
+          <div><label>Total ($)</label><input id="p-total" inputmode="numeric" placeholder="Blank = standard price"></div>
+          <div><label>Notes (optional)</label><input id="p-notes"></div>
+        </div>
+        <button class="btn b-coral" style="margin-top:16px">Save booking</button>
+        <div class="msg" id="pmsg"></div>
+      </form>
+    </div>
+
+    <div class="pane" id="p-blocks">
+      <form class="card" id="bf">
+        <h2 style="font-size:24px;margin-bottom:4px">Take carts out of service</h2>
+        <p class="hint">Blocked carts can't be booked online for those dates (repairs, personal use).</p>
+        <div class="grid g3">
+          <div><label>Cart</label><select id="b-cart"></select></div>
+          <div><label>From</label><input type="date" id="b-start"></div>
+          <div><label>Until</label><input type="date" id="b-end"></div>
+          <div><label>How many</label><input id="b-qty" inputmode="numeric" value="1"></div>
+          <div style="grid-column:span 2"><label>Reason (optional)</label><input id="b-reason" placeholder="e.g. battery service"></div>
+        </div>
+        <button class="btn b-navy" style="margin-top:16px">Block dates</button>
+        <div class="msg" id="bmsg"></div>
+      </form>
+      <div class="card sec"><h3 style="margin-bottom:6px">Current blocks</h3><div id="blocks"></div></div>
+    </div>
+
+    <div class="pane" id="p-fleet">
+      <div class="grid g2" id="fleet"></div>
+      <p class="hint sec">Summer (June–August) uses the weekly price, Saturday to Saturday. Spring and fall use the daily price, capped at the weekly price per week.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var TOKEN=null,DATA=null,FILTER='upcoming';
+try{TOKEN=localStorage.getItem('btb_admin')}catch(e){}
+var $=function(id){return document.getElementById(id)};
+function esc(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function fmt(d){return new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
+function today(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function api(path,body){
+  return fetch('/api/admin/'+path,{method:body?'POST':'GET',headers:{'content-type':'application/json',authorization:'Bearer '+TOKEN},body:body?JSON.stringify(body):undefined})
+    .then(function(r){return r.json().then(function(j){if(r.status===401){signOut();throw new Error(j.error)}if(!r.ok)throw new Error(j.error||'Something went wrong');return j})});
+}
+function signOut(){TOKEN=null;try{localStorage.removeItem('btb_admin')}catch(e){}$('app').style.display='none';$('login').style.display='block'}
+$('out').onclick=signOut;
+$('lf').onsubmit=function(e){e.preventDefault();$('lmsg').textContent='';
+  fetch('/api/admin/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:$('pw').value})})
+  .then(function(r){return r.json()}).then(function(j){if(!j.token){$('lmsg').textContent=j.error||'Could not sign in';return}
+    TOKEN=j.token;try{localStorage.setItem('btb_admin',TOKEN)}catch(e){}start()}).catch(function(){$('lmsg').textContent='Could not reach the server.'})};
+function start(){$('login').style.display='none';$('app').style.display='block';load()}
+function load(){return api('data').then(function(j){DATA=j;render()}).catch(function(e){$('list').innerHTML='<div class="empty">'+esc(e.message)+'</div>'})}
+function fleetName(t){var f=(DATA.fleet||[]).find(function(x){return x.type===t});return f?f.name:t+'-Seater'}
+
+/* tabs */
+$('tabs').onclick=function(e){var b=e.target.closest('button');if(!b)return;
+  [].forEach.call($('tabs').children,function(x){x.classList.toggle('on',x===b)});
+  document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.id==='p-'+b.dataset.p)});};
+$('filters').onclick=function(e){var b=e.target.closest('button');if(!b)return;FILTER=b.dataset.f;
+  [].forEach.call($('filters').children,function(x){x.classList.toggle('on',x===b)});renderList()};
+
+function render(){renderStats();renderList();renderBlocks();renderFleet();
+  var opts=DATA.fleet.map(function(f){return '<option value="'+f.type+'">'+esc(f.name)+'</option>'}).join('');
+  $('p-cart').innerHTML=opts;$('b-cart').innerHTML=opts;}
+
+function renderStats(){
+  var t=today(),b=DATA.bookings.filter(function(x){return x.status!=='cancelled'});
+  var up=b.filter(function(x){return x.end_date>=t});
+  var wk=new Date();wk.setDate(wk.getDate()+7);var w=wk.toISOString().slice(0,10);
+  var soon=up.filter(function(x){return x.start_date>=t&&x.start_date<=w});
+  var pend=up.filter(function(x){return x.status==='pending'});
+  var rev=up.reduce(function(s,x){return s+(x.total||0)},0);
+  $('stats').innerHTML=[[up.length,'Upcoming bookings'],[soon.length,'Pickups next 7 days'],[pend.length,'Need confirming'],['$'+rev.toLocaleString(),'Upcoming revenue']]
+    .map(function(s){return '<div class="stat"><b>'+s[0]+'</b><span>'+s[1]+'</span></div>'}).join('');
+}
+function renderList(){
+  var t=today(),list=DATA.bookings.filter(function(x){
+    if(FILTER==='cancelled')return x.status==='cancelled';
+    if(x.status==='cancelled')return false;
+    if(FILTER==='past')return x.end_date<t;
+    if(FILTER==='pending')return x.status==='pending'&&x.end_date>=t;
+    return x.end_date>=t;});
+  if(FILTER==='past')list=list.slice().reverse();
+  if(!list.length){$('list').innerHTML='<div class="empty">No bookings here yet.</div>';return}
+  $('list').innerHTML=list.map(function(x){
+    var bal=(x.total||0)-(x.deposit||0);
+    return '<div class="bk '+x.status+'" data-id="'+x.id+'"><div class="top"><div><h3>'+esc(x.name)+'</h3><div class="dates">'+fmt(x.start_date)+' → '+fmt(x.end_date)+' · '+esc(fleetName(x.cart_type))+'</div></div>'+
+      '<div><span class="badge '+x.status+'">'+x.status+'</span>'+(x.source==='phone'?'<span class="badge phone">phone</span>':'')+'</div></div>'+
+      '<div class="info">'+
+        '<div><span>Phone</span><a href="tel:'+esc(x.phone)+'">'+esc(x.phone||'—')+'</a></div>'+
+        '<div><span>Email</span>'+(x.email?'<a href="mailto:'+esc(x.email)+'">'+esc(x.email)+'</a>':'—')+'</div>'+
+        '<div><span>Booking</span>'+esc(x.code)+'</div>'+
+        '<div><span>Total</span>$'+(x.total||0).toLocaleString()+'</div>'+
+        '<div><span>Paid online</span>$'+(x.deposit||0).toLocaleString()+'</div>'+
+        '<div><span>Due at pickup</span>$'+bal.toLocaleString()+'</div>'+
+        (x.stay?'<div><span>Staying at</span>'+esc(x.stay)+'</div>':'')+
+        (x.party?'<div><span>Party size</span>'+esc(x.party)+'</div>':'')+
+        (x.notes?'<div style="grid-column:1/-1"><span>Notes</span>'+esc(x.notes)+'</div>':'')+
+      '</div><div class="acts">'+
+        (x.status==='pending'?'<button class="btn b-green sm" data-a="confirmed">Confirm</button>':'')+
+        (x.status!=='cancelled'?'<button class="btn b-red sm" data-a="cancelled">Cancel booking</button>':'<button class="btn b-line sm" data-a="pending">Restore</button>')+
+        (x.source!=='phone'?'<button class="btn b-line sm" data-a="sig">Signed agreement</button>':'')+
+      '</div><div class="sigbox"></div></div>';}).join('');
+}
+$('list').onclick=function(e){
+  var b=e.target.closest('button[data-a]');if(!b)return;var card=b.closest('.bk'),id=card.dataset.id,a=b.dataset.a;
+  if(a==='sig'){var box=card.querySelector('.sigbox');if(box.innerHTML){box.innerHTML='';return}box.innerHTML='<div class="sig">Loading…</div>';
+    api('signature?id='+id).then(function(j){box.innerHTML='<div class="sig">'+(j.signature?'<img src="'+esc(j.signature)+'" alt="Signature">':'No signature saved')+(j.agreed_at?'<div style="font-size:13px;color:var(--muted);margin-top:6px">Agreed '+new Date(j.agreed_at).toLocaleString()+'</div>':'')+'</div>'}).catch(function(err){box.innerHTML='<div class="sig">'+esc(err.message)+'</div>'});return}
+  if(a==='cancelled'&&!b.classList.contains('arm')){b.classList.add('arm');b.textContent='Tap again to cancel';setTimeout(function(){if(b.isConnected){b.classList.remove('arm');b.textContent='Cancel booking'}},4000);return}
+  b.disabled=true;api('status',{id:id,status:a}).then(load).catch(function(err){b.disabled=false;b.textContent=err.message});
+};
+
+/* phone booking */
+$('pf').onsubmit=function(e){e.preventDefault();var m=$('pmsg');m.className='msg';m.textContent='Saving…';
+  var body={cart:$('p-cart').value,start:$('p-start').value,end:$('p-end').value,name:$('p-name').value,phone:$("p-tel").value,email:$('p-email').value,stay:$('p-stay').value,total:$('p-total').value,notes:$('p-notes').value};
+  if(this.dataset.force==='1')body.force=true;
+  var form=this;
+  api('booking',body).then(function(j){m.className='msg ok';m.textContent='Saved as '+j.code+'.';form.reset();form.dataset.force='';load()})
+  .catch(function(err){m.className='msg err';
+    if(/free for those dates/.test(err.message)){m.textContent=err.message+' Tap Save again to book it anyway.';form.dataset.force='1'}else m.textContent=err.message});
+};
+
+/* blocks */
+function renderBlocks(){
+  var b=DATA.blocks||[];
+  $('blocks').innerHTML=b.length?b.map(function(x){return '<div class="row"><div><b>'+x.qty+' × '+esc(fleetName(x.cart_type))+'</b><br><span style="color:var(--muted);font-size:14px">'+fmt(x.start_date)+' → '+fmt(x.end_date)+(x.reason?' · '+esc(x.reason):'')+'</span></div><button class="btn b-line sm" data-id="'+x.id+'">Remove</button></div>'}).join(''):'<div class="hint" style="margin:8px 0 0">No carts blocked.</div>';
+}
+$('blocks').onclick=function(e){var b=e.target.closest('button[data-id]');if(!b)return;b.disabled=true;api('unblock',{id:b.dataset.id}).then(load)};
+$('bf').onsubmit=function(e){e.preventDefault();var m=$('bmsg');m.className='msg';m.textContent='Saving…';var form=this;
+  api('block',{cart:$('b-cart').value,start:$('b-start').value,end:$('b-end').value,qty:$('b-qty').value,reason:$('b-reason').value})
+  .then(function(){m.className='msg ok';m.textContent='Blocked.';form.reset();$('b-qty').value=1;load()}).catch(function(err){m.className='msg err';m.textContent=err.message})};
+
+/* fleet */
+function renderFleet(){
+  $('fleet').innerHTML=DATA.fleet.map(function(f){return '<form class="card fleetcard" data-t="'+f.type+'"><h3>'+esc(f.name)+'</h3><div class="grid g3">'+
+    '<div><label>How many</label><input name="count" inputmode="numeric" value="'+f.count+'"></div>'+
+    '<div><label>Summer week $</label><input name="week_price" inputmode="numeric" value="'+f.week_price+'"></div>'+
+    '<div><label>Off-season day $</label><input name="day_price" inputmode="numeric" value="'+f.day_price+'"></div></div>'+
+    '<button class="btn b-navy sm" style="margin-top:14px">Save</button><div class="msg"></div></form>'}).join('');
+}
+$('fleet').onsubmit=function(e){e.preventDefault();var f=e.target,m=f.querySelector('.msg');m.className='msg';m.textContent='Saving…';
+  api('fleet',{type:f.dataset.t,count:f.count.value,week_price:f.week_price.value,day_price:f.day_price.value})
+  .then(function(){var ty=f.dataset.t;return load().then(function(){var mm=document.querySelector('#fleet form[data-t="'+ty+'"] .msg');mm.className='msg ok';mm.textContent='Saved. The website uses these right away.'})}).catch(function(err){m.className='msg err';m.textContent=err.message})};
+
+if(TOKEN)start();
+})();
+</script>
+</body>
+</html>

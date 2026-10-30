@@ -15,6 +15,11 @@ export default {
     try {
       if (url.pathname === '/api/availability' && request.method === 'GET') return await availability(env);
       if (url.pathname === '/api/book' && request.method === 'POST') return await book(request, env);
+      if (url.pathname === '/api/admin/login' && request.method === 'POST') return await adminLogin(request, env);
+      if (url.pathname.startsWith('/api/admin/')) {
+        if (!(await checkToken(request, env))) return json({ error: 'Please sign in again.' }, 401);
+        return await admin(url, request, env);
+      }
       return json({ error: 'Not found' }, 404);
     } catch (e) {
       return json({ error: 'Server error', detail: String(e && e.message || e) }, 500);
@@ -158,4 +163,107 @@ async function notify(env, r) {
     `<div style="font-family:Arial,sans-serif"><h2 style="color:#0e3a54">Thanks, ${esc(r.name.split(' ')[0])}! We've got your booking.</h2>
      <p>We'll text you pickup details before your trip. Pickup is at 6016 E Oak Island Dr, Unit B, Oak Island, NC.</p>${table}
      <p>Questions? Call or text (704) 779-0263.</p></div>`);
+}
+
+
+/* ================= ADMIN ================= */
+const enc = new TextEncoder();
+async function hmac(secret, msg) {
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(msg));
+  return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/[+/=]/g, (c) => ({ '+': '-', '/': '_', '=': '' }[c]));
+}
+function safeEq(a, b) {
+  if (a.length !== b.length) return false;
+  let r = 0;
+  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
+}
+async function adminLogin(request, env) {
+  if (!env.ADMIN_PASSWORD) return json({ error: 'Admin password not set up yet.' }, 503);
+  const b = await request.json().catch(() => ({}));
+  const pw = String(b.password || '');
+  // compare hashes so length doesn't leak
+  if (!safeEq(await hmac('pw', pw), await hmac('pw', env.ADMIN_PASSWORD))) {
+    await new Promise((r) => setTimeout(r, 600));
+    return json({ error: 'Wrong password.' }, 401);
+  }
+  const exp = String(Date.now() + 14 * DAY);
+  return json({ token: exp + '.' + (await hmac(env.ADMIN_PASSWORD, exp)) });
+}
+async function checkToken(request, env) {
+  if (!env.ADMIN_PASSWORD) return false;
+  const tok = (request.headers.get('authorization') || '').replace(/^Bearer /, '');
+  const [exp, sig] = tok.split('.');
+  if (!exp || !sig || Number(exp) < Date.now()) return false;
+  return safeEq(sig, await hmac(env.ADMIN_PASSWORD, exp));
+}
+const COLS = 'id,code,created_at,cart_type,start_date,end_date,status,name,phone,email,stay,party,notes,total,deposit,source';
+async function admin(url, request, env) {
+  const p = url.pathname.replace('/api/admin/', '');
+  const body = request.method === 'POST' ? await request.json().catch(() => ({})) : {};
+  const s = (v, max = 200) => String(v ?? '').trim().slice(0, max);
+  const uuid = (v) => /^[0-9a-f-]{36}$/i.test(String(v || '')) ? v : null;
+
+  if (p === 'data') {
+    const since = iso(new Date(Date.now() - 60 * DAY));
+    const [fleet, bookings, blocks] = await Promise.all([
+      db(env, 'fleet?select=*&order=type'),
+      db(env, `bookings?select=${COLS}&end_date=gte.${since}&order=start_date.asc`),
+      db(env, `blocks?select=*&end_date=gte.${iso(new Date(Date.now() - DAY))}&order=start_date.asc`),
+    ]);
+    return json({ fleet, bookings, blocks });
+  }
+  if (p === 'signature') {
+    const id = uuid(url.searchParams.get('id'));
+    if (!id) return json({ error: 'Bad id' }, 400);
+    const [r] = await db(env, `bookings?select=signature,agreed_at&id=eq.${id}`);
+    return json(r || {});
+  }
+  if (p === 'status') {
+    const id = uuid(body.id), st = body.status;
+    if (!id || !['pending', 'confirmed', 'cancelled'].includes(st)) return json({ error: 'Bad request' }, 400);
+    await db(env, `bookings?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ status: st }) });
+    return json({ ok: true });
+  }
+  if (p === 'booking') {
+    const start = parseDate(body.start), end = parseDate(body.end);
+    if (!start || !end || end <= start) return json({ error: 'Pick valid dates.' }, 400);
+    const { fleet, busy } = await loadBusy(env);
+    const f = fleet.find((x) => x.type === String(body.cart));
+    if (!f) return json({ error: 'Pick a cart.' }, 400);
+    if (!s(body.name)) return json({ error: 'Enter a name.' }, 400);
+    if (f.count - maxInUse(busy, f.type, start, end) <= 0 && !body.force)
+      return json({ error: 'No ' + f.name + ' free for those dates.', full: true }, 409);
+    const total = body.total !== '' && body.total != null && !isNaN(Number(body.total)) ? Math.round(Number(body.total)) : priceFor(f, start, end);
+    const code = 'BTB-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+    const [row] = await db(env, 'bookings', { method: 'POST', body: JSON.stringify({
+      code, cart_type: f.type, start_date: iso(start), end_date: iso(end), name: s(body.name), phone: s(body.phone, 40),
+      email: s(body.email), stay: s(body.stay), notes: s(body.notes, 1000), total, deposit: 0, status: 'confirmed', source: 'phone',
+    }) });
+    return json({ ok: true, code: row.code });
+  }
+  if (p === 'block') {
+    const start = parseDate(body.start), end = parseDate(body.end);
+    if (!start || !end || end <= start) return json({ error: 'Pick valid dates.' }, 400);
+    if (!['4', '6'].includes(String(body.cart))) return json({ error: 'Pick a cart.' }, 400);
+    await db(env, 'blocks', { method: 'POST', body: JSON.stringify({
+      cart_type: String(body.cart), start_date: iso(start), end_date: iso(end), qty: Math.max(1, Math.min(50, parseInt(body.qty) || 1)), reason: s(body.reason),
+    }) });
+    return json({ ok: true });
+  }
+  if (p === 'unblock') {
+    const id = uuid(body.id);
+    if (!id) return json({ error: 'Bad id' }, 400);
+    await db(env, `blocks?id=eq.${id}`, { method: 'DELETE' });
+    return json({ ok: true });
+  }
+  if (p === 'fleet') {
+    const type = String(body.type);
+    if (!['4', '6'].includes(type)) return json({ error: 'Bad cart' }, 400);
+    const n = (v) => Math.max(0, Math.min(100000, parseInt(v) || 0));
+    await db(env, `fleet?type=eq.${type}`, { method: 'PATCH', body: JSON.stringify({ count: n(body.count), week_price: n(body.week_price), day_price: n(body.day_price) }) });
+    return json({ ok: true });
+  }
+  return json({ error: 'Not found' }, 404);
 }

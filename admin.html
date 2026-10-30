@@ -107,7 +107,7 @@ input,select,textarea{min-width:0}
   <p>By the Beach Golf Cart Rentals</p>
   <form id="lf" class="card">
     <label for="pw">Password</label>
-    <div class="pwwrap"><input id="pw" type="password" autocomplete="current-password"><button type="button" id="eye" aria-label="Show password"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/><line id="eyeslash" x1="3" y1="3" x2="21" y2="21" style="display:none"/></svg></button></div>
+    <div class="pwwrap"><input id="pw" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" inputmode="text"><button type="button" id="eye" aria-label="Show password"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/><line id="eyeslash" x1="3" y1="3" x2="21" y2="21" style="display:none"/></svg></button></div>
     <button class="btn b-coral" style="width:100%;margin-top:14px">Sign in</button>
     <div class="msg err" id="lmsg"></div>
   </form>
@@ -216,9 +216,11 @@ function api(path,body){
 }
 function signOut(){TOKEN=null;try{localStorage.removeItem('btb_admin')}catch(e){}$('app').style.display='none';$('login').style.display='block'}
 $('out').onclick=signOut;
+// iPhone keyboards can swap in curly quotes/long dashes and add trailing spaces; undo that
+function cleanPw(v){return String(v).replace(/[\u2018\u2019\u201A\u2032]/g,"'").replace(/[\u201C\u201D\u201E\u2033]/g,'"').replace(/[\u2010-\u2015\u2212]/g,'-').replace(/\u00A0/g,' ').trim()}
 $('eye').onclick=function(){var i=$('pw'),show=i.type==='password';i.type=show?'text':'password';$('eyeslash').style.display=show?'block':'none';this.setAttribute('aria-label',show?'Hide password':'Show password');i.focus()};
 $('lf').onsubmit=function(e){e.preventDefault();$('lmsg').textContent='';
-  fetch('/api/admin/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:$('pw').value})})
+  fetch('/api/admin/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:cleanPw($('pw').value)})})
   .then(function(r){return r.json()}).then(function(j){if(!j.token){$('lmsg').textContent=j.error||'Could not sign in';return}
     TOKEN=j.token;try{localStorage.setItem('btb_admin',TOKEN)}catch(e){}start()}).catch(function(){$('lmsg').textContent='Could not reach the server.'})};
 function start(){$('login').style.display='none';$('app').style.display='block';load()}

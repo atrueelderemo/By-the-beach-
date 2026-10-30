@@ -185,9 +185,9 @@ function safeEq(a, b) {
 async function adminLogin(request, env) {
   if (!env.ADMIN_PASSWORD) return json({ error: 'Admin password not set up yet.' }, 503);
   const b = await request.json().catch(() => ({}));
-  const pw = String(b.password || '');
+  const pw = String(b.password || '').trim();
   // compare hashes so length doesn't leak
-  if (!safeEq(await hmac('pw', pw), await hmac('pw', env.ADMIN_PASSWORD))) {
+  if (!safeEq(await hmac('pw', pw), await hmac('pw', String(env.ADMIN_PASSWORD).trim()))) {
     await new Promise((r) => setTimeout(r, 600));
     return json({ error: 'Wrong password.' }, 401);
   }

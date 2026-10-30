@@ -295,6 +295,7 @@ input.bad{border-color:var(--coral)}
 .opt.sel{border-color:var(--coral);box-shadow:0 0 0 4px rgba(239,111,85,.15)}
 .opt.off{opacity:.45;cursor:not-allowed}
 .opt svg{width:150px}
+.opt img.optimg{width:150px;aspect-ratio:4/3;object-fit:cover;border-radius:12px;display:block}
 .opt h3{font-size:22px}
 .opt p{color:var(--muted);font-size:14px}
 .avail{display:inline-block;margin-top:6px;font-size:13px;font-weight:700;padding:3px 10px;border-radius:999px}
@@ -303,7 +304,7 @@ input.bad{border-color:var(--coral)}
 .avail.no{background:#f3e1e1;color:#a33}
 .opt .p{font-family:"Fraunces",serif;font-size:24px;color:var(--navy);text-align:right}
 .opt .p small{display:block;font-family:"DM Sans";font-size:13px;color:var(--muted)}
-@media(max-width:600px){.opt{grid-template-columns:1fr auto}.opt svg{display:none}}
+@media(max-width:600px){.opt{grid-template-columns:104px 1fr;gap:4px 14px;padding:12px}.opt svg{display:none}.opt img.optimg{width:104px;border-radius:10px;grid-row:1/3}.opt h3{font-size:18px}.opt p{display:none}.avail{font-size:12px;margin-top:4px}.opt .p{grid-column:2;text-align:left;font-size:20px}.opt .p small{display:inline;margin-left:4px}}
 
 /* agreement */
 .agree{max-height:240px;overflow:auto;background:#f6f9fa;border:1px solid var(--line);border-radius:14px;padding:18px 20px;font-size:14px;color:#33505e;margin-bottom:16px}
@@ -887,7 +888,7 @@ document.addEventListener('click',function(e){
 document.getElementById('cform').addEventListener('submit',function(e){e.preventDefault();var n=document.getElementById('cnm');if(!n.value.trim()){n.classList.add('bad');n.focus();return}document.getElementById('cbody').style.display='none';document.getElementById('cok').style.display='block'});
 
 /* ================= BOOKING ================= */
-var FLEET={'4':{name:'4-Seater Bintelli',seats:4,count:4,week:600,day:95,svg:CART4},'6':{name:'6-Seater Bintelli',seats:6,count:3,week:700,day:115,svg:CART6}};
+var FLEET=window.FLEET={'4':{name:'4-Seater Bintelli',seats:4,count:4,week:600,day:95,svg:CART4},'6':{name:'6-Seater Bintelli',seats:6,count:3,week:700,day:115,svg:CART6}};
 var DEPOSIT=150, MS=864e5;
 function depFor(tot){return tot?Math.min(DEPOSIT,tot):DEPOSIT}
 var B={start:null,end:null,weeks:1,cart:null,step:1};
@@ -995,7 +996,7 @@ function renderPick(){
     var f=FLEET[t],a=availFor(t,B.start,B.end),p=priceFor(t);
     if(a<=0&&B.cart===t)B.cart=null;
     var av=a<=0?'<span class="avail no">Sold out for these dates</span>':a<=1?'<span class="avail low">Only 1 left!</span>':'<span class="avail ok">'+a+' available</span>';
-    h+='<button type="button" class="opt'+(a<=0?' off':'')+(B.cart===t?' sel':'')+'" data-t="'+t+'"'+(a<=0?' disabled':'')+'>'+f.svg+'<div><h3>'+f.name+'</h3><p>Seats '+f.seats+' · 40-mile lithium · Bluetooth · free parking</p>'+av+'</div><div class="p">$'+p.toLocaleString()+'<small>total</small></div></button>';
+    h+='<button type="button" class="opt'+(a<=0?' off':'')+(B.cart===t?' sel':'')+'" data-t="'+t+'"'+(a<=0?' disabled':'')+'><img class="optimg" src="cart-'+t+'.jpg" alt="'+f.name+'" onerror="this.outerHTML=FLEET[\''+t+'\'].svg"><div><h3>'+f.name+'</h3><p>Seats '+f.seats+' · 40-mile lithium · Bluetooth · free parking</p>'+av+'</div><div class="p">$'+p.toLocaleString()+'<small>total</small></div></button>';
   });
   document.getElementById('pick').innerHTML=h;
 }

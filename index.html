@@ -581,7 +581,7 @@ footer .fl a{display:block;text-decoration:none;opacity:.85;margin-bottom:4px}
 <section class="view" data-view="book">
   <div class="panel" style="margin-top:50px">
     <div class="bk">
-      <div class="bk-head"><span class="eyebrow">Book online</span><h1>Reserve your cart</h1><p>Takes about two minutes. Hold it with a $150 deposit, pay the rest at pickup.</p></div>
+      <div class="bk-head"><span class="eyebrow">Book online</span><h1>Reserve your cart</h1><p>Takes about two minutes. Hold it with a deposit of up to $150, pay the rest at pickup.</p></div>
       <div class="prog" id="prog"><div>Dates</div><div>Cart</div><div>Details</div><div>Agreement</div><div>Deposit</div></div>
 
       <div class="bk-grid" id="bkgrid">
@@ -659,8 +659,8 @@ footer .fl a{display:block;text-decoration:none;opacity:.85;margin-bottom:4px}
 
           <!-- STEP 5 pay -->
           <div class="bstep card" data-step="5">
-            <h3>Hold your cart</h3>
-            <p class="hint">Pay a $150 deposit now. The balance is due at pickup.</p>
+            <h3 id="payh">Hold your cart</h3>
+            <p class="hint" id="payhint">Pay a $150 deposit now. The balance is due at pickup.</p>
             <div class="demo-banner">Demo preview: no card is charged. On the live site, payments go securely to the business's own Stripe account.</div>
             <div class="paybox">
               <div class="field"><label class="l" for="cn">Card number</label><input id="cn" inputmode="numeric" placeholder="4242 4242 4242 4242" maxlength="19"></div>
@@ -687,7 +687,7 @@ footer .fl a{display:block;text-decoration:none;opacity:.85;margin-bottom:4px}
           <div class="ln"><span>Length</span><span id="s-len">—</span></div>
           <div class="ln"><span>Cart</span><span id="s-cart">—</span></div>
           <div class="tot" id="s-tot">$0</div>
-          <div class="dep">Due today: <b>$150 deposit</b><br><span id="s-bal">Balance at pickup: —</span></div>
+          <div class="dep">Due today: <b id="s-dep">up to $150</b><br><span id="s-bal">Balance at pickup: —</span></div>
           <p class="note">Includes free parking, Bluetooth radio and a 40-mile lithium battery.</p>
         </aside>
         <div id="sheetbg"></div>
@@ -703,7 +703,7 @@ footer .fl a{display:block;text-decoration:none;opacity:.85;margin-bottom:4px}
         <div class="card next">
           <div class="ln" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">Cart</span><b id="d-cart"></b></div>
           <div class="ln" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">Dates</span><b id="d-dates" style="text-align:right"></b></div>
-          <div class="ln" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">Deposit paid</span><b>$150</b></div>
+          <div class="ln" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)" id="d-deplbl">Deposit paid</span><b id="d-dep">$150</b></div>
           <div class="ln" style="display:flex;justify-content:space-between;padding:8px 0"><span style="color:var(--muted)">Due at pickup</span><b id="d-bal"></b></div>
           <p style="margin-top:14px;color:var(--muted);font-size:15px">We'll text <b id="d-ph"></b> with pickup details before your trip. Pickup is at 6016 E Oak Island Dr, Unit B.</p>
         </div>
@@ -722,7 +722,7 @@ footer .fl a{display:block;text-decoration:none;opacity:.85;margin-bottom:4px}
       <h3 style="margin-top:0">Booking</h3>
       <details><summary>How do summer rentals work?</summary><p>During June, July and August we rent by the week, Saturday to Saturday. You can book one week or several back to back.</p></details>
       <details><summary>Can I rent for just a few days?</summary><p>Yes, outside of summer. In spring and fall you can pick any start and end dates when you book online.</p></details>
-      <details><summary>How much is due when I book?</summary><p>A $150 deposit holds your cart. The rest of your balance is due at pickup.</p></details>
+      <details><summary>How much is due when I book?</summary><p>A $150 deposit holds your cart, and the rest is due at pickup. If your rental totals less than $150, you simply pay it in full when you book.</p></details>
       <details><summary>Can I book by phone instead?</summary><p>Of course. Call (704) 779-0263 and you'll talk directly to the owner.</p></details>
       <h3>The carts</h3>
       <details><summary>How far can I go on a charge?</summary><p>About 40 miles on one charge with our upgraded lithium batteries, versus roughly 20 for a standard cart. Plug it in each night and you're set for the next day. Please keep the battery above 30% while driving.</p></details>
@@ -889,6 +889,7 @@ document.getElementById('cform').addEventListener('submit',function(e){e.prevent
 /* ================= BOOKING ================= */
 var FLEET={'4':{name:'4-Seater Bintelli',seats:4,count:4,week:600,day:95,svg:CART4},'6':{name:'6-Seater Bintelli',seats:6,count:3,week:700,day:115,svg:CART6}};
 var DEPOSIT=150, MS=864e5;
+function depFor(tot){return tot?Math.min(DEPOSIT,tot):DEPOSIT}
 var B={start:null,end:null,weeks:1,cart:null,step:1};
 var today=new Date();today.setHours(0,0,0,0);
 var calM=new Date(today.getFullYear(),today.getMonth(),1);
@@ -994,7 +995,13 @@ function renderSum(){
   document.getElementById('s-cart').textContent=B.cart?FLEET[B.cart].name:'—';
   var tot=B.cart&&n?priceFor(B.cart):0;
   document.getElementById('s-tot').textContent=tot?'$'+tot.toLocaleString():(n?'Choose a cart':'$0');
-  document.getElementById('s-bal').textContent='Balance at pickup: '+(tot?'$'+(tot-DEPOSIT).toLocaleString():'—');
+  var dp=depFor(tot),full=tot&&dp>=tot;
+  document.getElementById('s-dep').textContent=tot?(full?'$'+tot.toLocaleString()+' (paid in full)':'$'+dp+' deposit'):'up to $150';
+  document.getElementById('s-bal').textContent='Balance at pickup: '+(tot?'$'+(tot-dp).toLocaleString():'—');
+  LABELS[3]=full?'Continue to payment →':'Continue to deposit →';
+  LABELS[4]=tot?(full?'Pay $'+tot.toLocaleString()+' now':'Pay $'+dp+' deposit'):'Pay deposit';
+  document.getElementById('payh').textContent=full?'Pay for your cart':'Hold your cart';
+  document.getElementById('payhint').textContent=full?'Your rental is under $150, so it\u2019s paid in full today. Nothing due at pickup.':'Pay a $'+dp+' deposit now. The balance is due at pickup.';
   document.getElementById('bk-tot').textContent=tot?'$'+tot.toLocaleString():'$0';
   var sub=[];if(B.cart)sub.push(B.cart+'-Seater');if(B.start)sub.push(fmt(B.start).replace(/^\w+, /,'')+(B.end?' → '+fmt(B.end).replace(/^\w+, /,''):''));
   document.getElementById('bk-sub').textContent=sub.length?sub.join(' · ')+' · Details':'Pick your dates';
@@ -1033,6 +1040,7 @@ function showStep(n){
   if(n===2)renderPick();
   if(n===4)setTimeout(sizeSig,30);
   renderSum();
+  document.getElementById('next').textContent=LABELS[n-1];document.getElementById('bknext').textContent=LABELS[n-1];
   setTarget(scrollProgress());
 }
 function val(id){return document.getElementById(id).value.trim()}
@@ -1061,7 +1069,10 @@ function finish(){
   document.getElementById('d-code').textContent='BTB-'+Math.floor(1000+Math.random()*9000);
   document.getElementById('d-cart').textContent=FLEET[B.cart].name;
   document.getElementById('d-dates').textContent=fmt(B.start)+' → '+fmt(B.end,true);
-  document.getElementById('d-bal').textContent='$'+(tot-DEPOSIT).toLocaleString();
+  var dp=depFor(tot);
+  document.getElementById('d-bal').textContent='$'+(tot-dp).toLocaleString();
+  document.getElementById('d-dep').textContent='$'+dp.toLocaleString();
+  document.getElementById('d-deplbl').textContent=dp>=tot?'Paid in full':'Deposit paid';
   document.getElementById('d-ph').textContent=val('ph');
   window.scrollTo(0,0);updateFlag();syncBar();setTarget(scrollProgress());
 }

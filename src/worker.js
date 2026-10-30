@@ -9,6 +9,9 @@ const DAY = 86400000;
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === '/admin' || url.pathname === '/admin/') {
+      return Response.redirect(url.origin + '/admin.html', 302);
+    }
     if (!url.pathname.startsWith('/api/')) {
       return env.ASSETS ? env.ASSETS.fetch(request) : new Response('Not found', { status: 404 });
     }
